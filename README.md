@@ -1,15 +1,15 @@
 # eye_controlled_wheelchair
-About this project:
+ABOUT THIS PROJECT:
 
   Eyeball gestures controlled wheelchair with voice assistant.
   The voice assistant is to enable and disable eyetracking.
   
-Requirements:
+REQUIREMENTS:
 
   This project is requires an laptop or pc with webcam and internet connection to track the eyes
   To run this python code Python 3.10 should be installed in laptop or pc
   
-  Python libraries to be installed
+  PYTHON LIBRARIES TO BE INSTALLED
   
   #Pyaudio
   
@@ -27,27 +27,32 @@ Requirements:
   
   #customtkinter
   
-Hardware components:
+HARDWARE COMPONENTS:
 
-  Laptop with webcam
+  #Laptop with webcam
   
-  Arduino uno
+  #Arduino uno
   
-  Hc-05 Bluetooth module
+  #Hc-05 Bluetooth module
   
-  12v dc motor and motor drive L298N(we did miniature so we use this configuration)
+  #12v dc motor and motor drive L298N(we did miniature so we use this configuration)
   
-  Batteries and Motors are depends on the size of the wheelchair
+  #Batteries and Motors are depends on the size of the wheelchair
   
-Problems:
+PROBLEMS:
+
   Voice assistance feature is not stable.
-  Remove voice assistance feature if you face any problems,Eye tracking Will work perfectly.
+  Remove voice assistance feature if you face   any problems,Eye tracking Will work perfectly.
 
-Eye gestures for wheel chair movement
+EYE GESTURES FOR WHEEL CHAIR MOVEMENT
+
   Forward : close left eye and look center
+  
   Left : move both eyeballs to left
+  
   Right : move both eyeballs to right
+  
   Stop : look center
   
   
-Note : Iam just a beginner i refferd a lot of sources to do this project of academic.This is not an efficient code its just an prototype 
+NOTE : Iam just a beginner i refferd a lot of sources to do this project of academic.This is not an efficient code its just an prototype 
