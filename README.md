@@ -30,10 +30,13 @@ Requirements:
 Hardware components:
 
   Laptop with webcam
-  Arduino
+  
+  Arduino uno
+  
   Hc-05 Bluetooth module
-  Ultrasonic sensor
+  
   12v dc motor and motor drive L298N(we did miniature so we use this configuration)
+  
   Batteries and Motors are depends on the size of the wheelchair
   
 Problems:
@@ -47,4 +50,4 @@ Eye gestures for wheel chair movement
   Stop : look center
   
   
-Note : Iam just a beginner i refferd a lot of sources to do this project of academic.
+Note : Iam just a beginner i refferd a lot of sources to do this project of academic.This is not an efficient code its just an prototype 
