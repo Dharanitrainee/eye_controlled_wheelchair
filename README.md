@@ -4,28 +4,11 @@ ABOUT THIS PROJECT:
   Eyeball gestures controlled wheelchair with voice assistant.
   The voice assistant is to enable and disable eyetracking.
   
-REQUIREMENTS:
+Installation:
+pip install -r requirements.txt
 
-  This project is requires an laptop or pc with webcam and internet connection to track the eyes
-  To run this python code Python 3.10 should be installed in laptop or pc
+  Tensorflow is working with Python 3.10 version 
   
-  PYTHON LIBRARIES TO BE INSTALLED
-  
-  #Pyaudio
-  
-  #Tensorflow
-  
-  #Mediapipe
-  
-  #Opencv
-  
-  #Numpy
-  
-  #pyttsx3
-  
-  #pyserial
-  
-  #customtkinter
   
 HARDWARE COMPONENTS:
 
