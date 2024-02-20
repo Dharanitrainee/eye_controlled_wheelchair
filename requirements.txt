@@ -1,0 +1,8 @@
+opencv-python
+tensorflow
+mediapipe
+pyttsx3
+numpy
+pyserial
+customtkinter
+PyAudio
