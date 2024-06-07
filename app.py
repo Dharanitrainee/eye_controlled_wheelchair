@@ -1,6 +1,4 @@
 import pyttsx3 as tts
-import customtkinter
-from customtkinter import *
 import threading
 import cv2
 import math
@@ -8,7 +6,6 @@ import utils
 import numpy as np
 import mediapipe as mp
 import speech_recognition
-import datetime
 import sys
 import time
 import serial
@@ -26,96 +23,7 @@ engine.setProperty("rate", 150)
 def speak(data):
     engine.say(data)
     print(name_assistant + " : " + data)
-    label2.configure(text=data)
     engine.runAndWait()
-
-
-def wishMe():
-    hour = datetime.datetime.now().hour
-    if hour >= 0 and hour < 12:
-        speak("Hello,Good Morning")
-
-    elif hour >= 12 and hour < 18:
-        speak("Hello,Good Afternoon")
-
-    else:
-        speak("Hello,Good Evening")
-
-
-def date():
-    now = datetime.datetime.now()
-    my_date = datetime.datetime.today()
-
-    month_name = now.month
-    day_name = now.day
-    month_names = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-    ]
-    ordinalnames = [
-        "1st",
-        "2nd",
-        "3rd",
-        " 4th",
-        "5th",
-        "6th",
-        "7th",
-        "8th",
-        "9th",
-        "10th",
-        "11th",
-        "12th",
-        "13th",
-        "14th",
-        "15th",
-        "16th",
-        "17th",
-        "18th",
-        "19th",
-        "20th",
-        "21st",
-        "22nd",
-        "23rd",
-        "24rd",
-        "25th",
-        "26th",
-        "27th",
-        "28th",
-        "29th",
-        "30th",
-        "31st",
-    ]
-
-    speak(
-        "Today is "
-        + month_names[month_name - 1]
-        + " "
-        + ordinalnames[day_name - 1]
-        + "."
-    )
-
-
-global app
-customtkinter.set_appearance_mode("dark")
-customtkinter.set_default_color_theme("dark-blue")
-app = customtkinter.CTk()
-app.bind("<Escape>", lambda e: app.quit())
-cframe = customtkinter.CTkFrame(master=app, height=300, width=800)
-cframe.pack()
-label = customtkinter.CTkLabel(master=cframe, text="😃", font=("Arial", 250, "bold"))
-label.pack(padx=20, pady=20)
-label2 = customtkinter.CTkLabel(master=cframe, text="")
-label2.pack()
 
 
 mp_face_mesh = mp.solutions.face_mesh
@@ -290,23 +198,42 @@ R_H_LEFT = [362]
 R_H_RIGHT = [263]
 RV_TOP = [159]
 RV_BOTTOM = [145]
-# runIs = True
-# print('Connecting to Arduino........')
-# try:
-#   arduino = serial.Serial(port='COM6', baudrate=9600)
-# except:
-#   print(' Failed to Connected with Arduino! \n--------------------------------- \n Connect Arduino with correct port\n--------------------------------- \n Windows: COM port\n--------------------------------- \n Linux or Mac dev/tty or " Google it for Mac Or Linux"')
-#  print("---------------------------------\n Exiting ....")
-# runIs = False
-# else:
-# print(runIs)
-#   print("successfully connected to The Arduino, ")
+
+
+def initialize_arduino(port='COM17', baudrate=9600):
+    try:
+        arduino = serial.Serial(port=port, baudrate=baudrate)
+        print("Successfully connected to Arduino.")
+        return arduino
+    except serial.SerialException:
+        print("Failed to connect to Arduino. Please check the connection.")
+        return None
+
+
+def send_to_arduino(arduino_controller, data):
+    try:
+        arduino_controller.write(str(data).encode())
+        print("Data sent to Arduino:", data)
+        time.sleep(0.19)
+        arduino_controller.flush()
+    except AttributeError:
+        print("Arduino is not initialized.")
+    except serial.SerialException:
+        print("Failed to send data to Arduino.")
+
+
+def close_arduino(controller):
+    if controller is not None:
+        controller.close()
+        print("Arduino connection closed.")
 
 
 vid = cv2.VideoCapture(0)
 width, height = 800, 600
 vid.set(cv2.CAP_PROP_FRAME_WIDTH, width)
 vid.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+arduino = None
+tracking_active = True
 
 
 def euclidean_distance(point1, point2):
@@ -331,6 +258,7 @@ def iris_position(iris_center, right_point, left_point):
 
 
 def blink(img, landmarks, left_indices):
+    global arduino
     RH_TOP = landmarks[left_indices[12]]
     RH_BOTTOM = landmarks[left_indices[4]]
     cv2.line(img, RH_TOP, RH_BOTTOM, utils.GREEN, 2)
@@ -338,149 +266,142 @@ def blink(img, landmarks, left_indices):
     RV_DISTANCE = int(RV_DISTANCE)
     RV_DISTANCE = RV_DISTANCE / 2
     if RV_DISTANCE <= 5:
-        # arduino.write(str(5).encode())
+        send_to_arduino(arduino, 5)
         color = [utils.GRAY, utils.MAGENTA]
         cv2.putText(img, "FORWARD", (200, 50), FONTS, 1.3, utils.PINK, 2)
     elif RV_DISTANCE > 5:
-        # arduino.write(str(6).encode())
+        send_to_arduino(arduino, 6)
         color = [utils.GRAY, utils.MAGENTA]
 
 
 def tracking():
-    with mp_face_mesh.FaceMesh(
-        max_num_faces=1,
-        refine_landmarks=True,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5,
-    ) as face_mesh:
-        while True:
-            sucess, img = vid.read()
-            img = cv2.flip(img, 1)
-            rgb_frame = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img_h, img_w = img.shape[:2]
-            results = face_mesh.process(rgb_frame)
-            if results.multi_face_landmarks:
-                mesh_points = np.array(
-                    [
-                        np.multiply([p.x, p.y], [img_w, img_h]).astype(int)
-                        for p in results.multi_face_landmarks[0].landmark
-                    ]
-                )
-                blink(img, mesh_points, RIGHT_EYE)
-                cv2.polylines(
-                    img, [mesh_points[LEFT_IRIS]], True, (0, 255, 0), 1, cv2.LINE_AA
-                )
-                cv2.polylines(
-                    img, [mesh_points[LEFT_EYE]], True, (0, 255, 0), 1, cv2.LINE_AA
-                )
-                cv2.polylines(
-                    img, [mesh_points[RIGHT_IRIS]], True, (0, 255, 0), 1, cv2.LINE_AA
-                )
-                cv2.polylines(
-                    img, [mesh_points[RIGHT_EYE]], True, (0, 255, 0), 1, cv2.LINE_AA
-                )
-                (l_cx, l_cy), l_radius = cv2.minEnclosingCircle(mesh_points[LEFT_IRIS])
-                (r_cx, r_cy), r_radius = cv2.minEnclosingCircle(mesh_points[RIGHT_IRIS])
-                center_left = np.array([l_cx, l_cy], dtype=np.int32)
-                center_right = np.array([r_cx, r_cy], dtype=np.int32)
-                cv2.circle(
-                    img, center_left, int(l_radius), (255, 0, 255), 1, cv2.LINE_AA
-                )
-                cv2.circle(
-                    img, center_right, int(r_radius), (255, 0, 255), 1, cv2.LINE_AA
-                )
-                cv2.circle(
-                    img, mesh_points[R_H_RIGHT][0], 3, (255, 0, 255), -1, cv2.LINE_AA
-                )
-                cv2.circle(
-                    img, mesh_points[R_H_LEFT][0], 3, (0, 255, 255), -1, cv2.LINE_AA
-                )
-                cv2.circle(
-                    img, mesh_points[RV_TOP][0], 3, (0, 255, 255), -1, cv2.LINE_AA
-                )
-                cv2.circle(
-                    img, mesh_points[RV_BOTTOM][0], 3, (255, 0, 255), -1, cv2.LINE_AA
-                )
-                iris_pos, ratio = iris_position(
-                    center_right, mesh_points[R_H_RIGHT], mesh_points[R_H_LEFT][0]
-                )
-                cv2.imshow("output", img)
-                if iris_pos == "center":
-                    print("center")
-                #         arduino.write(str(2).encode())
-                #         time.sleep(0.019)
-                #          arduino.flush()
-                elif iris_pos == "right":
-                    #        arduino.write(str(3).encode())
-                    cv2.putText(img, "RIGHT", (200, 50), FONTS, 1.3, utils.PINK, 2)
-                    # time.sleep(0.019)
-                #       arduino.flush()
-                elif iris_pos == "left":
-                    #      arduino.write(str(4).encode())
-                    cv2.putText(img, "LEFT", (200, 50), FONTS, 1.3, utils.PINK, 2)
-                    time.sleep(0.019)
-                #     arduino.flush()
-                if cv2.waitKey(1) == 113:
+    global tracking_active
+    while tracking_active:
+        with mp_face_mesh.FaceMesh(
+                max_num_faces=1,
+                refine_landmarks=True,
+                min_detection_confidence=0.5,
+                min_tracking_confidence=0.5,
+        ) as face_mesh:
+            while True:
+                ret, img = vid.read()
+                if not ret or not tracking_active:
+                    print("Error: Failed to capture frame.")
                     break
+                img = cv2.flip(img, 1)
+                rgb_frame = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                img_h, img_w = img.shape[:2]
+                results = face_mesh.process(rgb_frame)
+                if results.multi_face_landmarks:
+                    mesh_points = np.array(
+                        [
+                            np.multiply([p.x, p.y], [img_w, img_h]).astype(int)
+                            for p in results.multi_face_landmarks[0].landmark
+                        ]
+                    )
+                    blink(img, mesh_points, RIGHT_EYE)
+                    cv2.polylines(
+                        img, [mesh_points[LEFT_IRIS]], True, (0, 255, 0), 1, cv2.LINE_AA
+                    )
+                    cv2.polylines(
+                        img, [mesh_points[LEFT_EYE]], True, (0, 255, 0), 1, cv2.LINE_AA
+                    )
+                    cv2.polylines(
+                        img, [mesh_points[RIGHT_IRIS]], True, (0, 255, 0), 1, cv2.LINE_AA
+                    )
+                    cv2.polylines(
+                        img, [mesh_points[RIGHT_EYE]], True, (0, 255, 0), 1, cv2.LINE_AA
+                    )
+                    (l_cx, l_cy), l_radius = cv2.minEnclosingCircle(mesh_points[LEFT_IRIS])
+                    (r_cx, r_cy), r_radius = cv2.minEnclosingCircle(mesh_points[RIGHT_IRIS])
+                    center_left = np.array([l_cx, l_cy], dtype=np.int32)
+                    center_right = np.array([r_cx, r_cy], dtype=np.int32)
+                    cv2.circle(
+                        img, center_left, int(l_radius), (255, 0, 255), 1, cv2.LINE_AA
+                    )
+                    cv2.circle(
+                        img, center_right, int(r_radius), (255, 0, 255), 1, cv2.LINE_AA
+                    )
+                    cv2.circle(
+                        img, mesh_points[R_H_RIGHT][0], 3, (255, 0, 255), -1, cv2.LINE_AA
+                    )
+                    cv2.circle(
+                        img, mesh_points[R_H_LEFT][0], 3, (0, 255, 255), -1, cv2.LINE_AA
+                    )
+                    cv2.circle(
+                        img, mesh_points[RV_TOP][0], 3, (0, 255, 255), -1, cv2.LINE_AA
+                    )
+                    cv2.circle(
+                        img, mesh_points[RV_BOTTOM][0], 3, (255, 0, 255), -1, cv2.LINE_AA
+                    )
+                    iris_pos, ratio = iris_position(
+                        center_right, mesh_points[R_H_RIGHT], mesh_points[R_H_LEFT][0]
+                    )
+                    cv2.imshow("output", img)
+                    if iris_pos == "center":
+                        print("center")
+                        send_to_arduino(arduino, 2)
+                    elif iris_pos == "right":
+                        print("right")
+                        send_to_arduino(arduino, 4)
+                        cv2.putText(img, "RIGHT", (200, 50), FONTS, 1.3, utils.PINK, 2)
+                    elif iris_pos == "left":
+                        print("left")
+                        send_to_arduino(arduino, 3)
+                        cv2.putText(img, "LEFT", (200, 50), FONTS, 1.3, utils.PINK, 2)
+                        time.sleep(0.019)
+                    if cv2.waitKey(1) == 113:
+                        break
 
 
-def Process_audio():
-    if __name__ == "__main__":
-        while True:
-            try:
-                r = speech_recognition.Recognizer()
-                with speech_recognition.Microphone() as mic:
-                    audio = r.listen(mic)
-                    text = r.recognize_google(audio)
-                    print("Listening")
-                    statement = text.lower()
-                    results = ""
-                    if "leo" in statement or "hi" in statement or "hello" in statement:
-                        wishMe()
+def process_audio():
+    global tracking_active
+    global arduino
+    while True:
+        try:
+            r = speech_recognition.Recognizer()
+            r.dynamic_energy_threshold = True
+            with speech_recognition.Microphone() as mic:
+                audio = r.listen(mic)
+                text = r.recognize_google(audio)
+                print("Listening")
+                statement = text.lower()
+                results = ""
+                if "shutdown" in statement or "turnoff" in statement:
+                    print(f"Detected command: {statement}")
+                    speak(
+                        "Your personal assistant "
+                        + name_assistant
+                        + " is shutting down, Goodbye"
+                    )
+                    close_arduino(arduino)
+                    vid.release()
+                    cv2.destroyAllWindows()
+                    sys.exit(0)
 
-                    if "shutdown" in statement or "stop" in statement:
-                        speak(
-                            "Your personal assistant "
-                            + name_assistant
-                            + " is shutting down, Good bye"
-                        )
-                        app.destroy()
-                        sys.exit()
+                if "start tracking" in statement or "enable tracking" in statement:
+                    speak("Eye tracking has been started")
+                    threading.Thread(target=tracking).start()
 
-                    if "what is the time now" in statement:
-                        strTime = datetime.datetime.now().strftime("%H:%M:%S")
-                        speak(f"the time is {strTime}")
+                if "stop tracking" in statement or "stop" in statement or "end tracking" in statement:
+                    speak("Eye tracking has been stopped")
+                    tracking_active = False
+                    threading.Thread(target=tracking).join()
+                    send_to_arduino(arduino, 6)
+                    cv2.destroyAllWindows()
 
-                    if "today's date" in statement:
-                        date()
-
-                    if "who are you" in statement or "what can you do" in statement:
-                        speak(
-                            "I am "
-                            + name_assistant
-                            + " your personal assistant. I am programmed to assist you"
-                        )
-
-                    if (
-                        "who made you" in statement
-                        or "who created you" in statement
-                        or "who discovered you" in statement
-                    ):
-                        speak("I was made by dharani mohan")
-
-                    if "Start tracking" in statement or "enable tracking" in statement:
-                        speak("Eye tracking has been started")
-                        threading.Thread(target=tracking).start()
-
-                    speak(results)
-            except r.RequestError as e:
-                print("Could not request results; {0}".format(e))
-
-            except speech_recognition.UnknownValueError:
-                r = speech_recognition.Recognizer()
-                print("please ask only trained questions!")
-                continue
+                speak(results)
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            print("An error occurred:", e)
 
 
-threading.Thread(target=Process_audio).start()
-app.mainloop()
+def main():
+    global arduino
+    arduino = initialize_arduino()
+    process_audio()
+
+
+if _name_ == "_main_":
+    main()
