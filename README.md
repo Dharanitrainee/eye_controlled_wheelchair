@@ -1,5 +1,4 @@
 # eye_controlled_wheelchair
-ABOUT THIS PROJECT:
 
   Eyeball gestures controlled wheelchair with voice assistant.
   The voice assistant is to enable and disable eyetracking.
