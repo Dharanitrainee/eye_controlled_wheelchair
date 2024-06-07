@@ -37,4 +37,4 @@ EYE GESTURES FOR WHEEL CHAIR MOVEMENT
   Stop : look center
   
   
-NOTE : Iam just a beginner i refferd a lot of sources to do this project of academic.This is not an efficient code its just an prototype 
+NOTE : Iam just a beginner i refferd a lot of sources to do this project for academics. This is not an efficient code its just an prototype 
