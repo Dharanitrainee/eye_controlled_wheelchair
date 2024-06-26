@@ -5,10 +5,7 @@
   
 Installation:
 pip install -r requirements.txt
-
-  Tensorflow is working with Python 3.10 version 
-  
-  
+    
 HARDWARE COMPONENTS:
 
   #Laptop with webcam
@@ -21,10 +18,6 @@ HARDWARE COMPONENTS:
   
   #Batteries and Motors are depends on the size of the wheelchair
   
-PROBLEMS:
-
-  Voice assistance feature is not stable.
-  Remove voice assistance feature if you face   any problems,Eye tracking Will work perfectly.
 
 EYE GESTURES FOR WHEEL CHAIR MOVEMENT
 
@@ -37,4 +30,4 @@ EYE GESTURES FOR WHEEL CHAIR MOVEMENT
   Stop : look center
   
   
-NOTE : Iam just a beginner i refferd a lot of sources to do this project for academics. This is not an efficient code its just an prototype 
+Reference: AiPhile
